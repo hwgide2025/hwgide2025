@@ -59,4 +59,12 @@ export function NextIcon({ size = 18, color = '#eaeaea' }) {
   )
 }
 
-export default { PlayIcon, PauseIcon, VolumeIcon, MuteIcon }
+export function RemoveIcon({ size = 16, color = '#eaeaea' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <path d="M6 6 L18 18 M6 18 L18 6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  )
+}
+
+export default { PlayIcon, PauseIcon, VolumeIcon, MuteIcon, RemoveIcon }

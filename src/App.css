@@ -62,7 +62,20 @@ body { overflow-y: auto; }
 .content-grid { display: grid; grid-template-columns: 1fr 420px 260px; gap: 1.5rem; align-items: start }
 
 .main { flex:1; padding: 0.75rem; background: linear-gradient(180deg,#121212,#0b0b0b); color: #eaeaea; overflow: visible; }
+
+/* subtle site tint derived from the current track cover average color */
+#app-root::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  /* Increased alpha for a more noticeable but still subtle tint */
+  background: linear-gradient(180deg, rgba(var(--tint-rgb, 29,185,84), 0.6), rgba(0,0,0,0));
+}
 .main-header h1 { margin: 0 0 0.25rem 0 }
+.main-header { transition: color 240ms ease }
+.main-header h1, .main-header p { color: var(--tint-text, #ffffff) }
 .content-grid { display: grid; grid-template-columns: 28% 1fr 220px; gap: 1rem; align-items: start }
 
 .capture-card, .player-card, .history-card { position: relative; background: #181818; padding: 1rem; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.6); overflow: hidden }
@@ -333,3 +346,32 @@ body { overflow-y: auto; }
   fill: #ffffff !important;
   stroke: none !important;
 }
+
+/* Boxed buttons for queue actions */
+.boxed-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(180deg, rgba(30,30,30,0.95), rgba(45,45,45,0.95));
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  padding: 6px;
+}
+.boxed-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(0,0,0,0.6) }
+.boxed-btn:active { transform: translateY(0); box-shadow: 0 6px 12px rgba(0,0,0,0.45) }
+.boxed-btn svg { width: 22px; height: 22px; display:block }
+
+/* make the queue-only cover a bit larger and square to emphasize the queued single item */
+.queue-only-cover { width:56px; height:56px; border-radius:8px }
+
+/* align the queue-item so the cover stays on the left and action buttons are right-aligned with even spacing */
+.queue-item { justify-content: space-between; }
+.queue-item .action-group { display:flex; gap:12px; align-items:center; }
+.queue-item .action-group .boxed-btn { width:56px; height:56px; border-radius:12px }
+/* Nudge the first boxed button (play) slightly to the right for visual offset */
+.queue-item .action-group .boxed-btn:first-child { margin-left: 8px }

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import './App.css'
 import Player from './components/Player'
+import { PlayIcon, RemoveIcon } from './components/Icons'
 import WebcamCapture from './components/WebcamCapture'
 import { sendImageToApi } from './api'
 
@@ -17,6 +18,52 @@ function App() {
   const [error, setError] = useState(null)
   const playerRef = useRef()
   const prevObjectUrl = useRef(null)
+  // Simple FIFO queue for upcoming tracks (state + ref so UI updates reliably)
+  const queueRef = useRef([])
+  const [queue, setQueue] = useState([])
+
+  // enqueue a track (object with { src, title, artist, album, cover })
+  function enqueueTrack(track) {
+    queueRef.current.push(track)
+    setQueue([...queueRef.current])
+  }
+
+  // play now from queue at index (remove from queue and play)
+  function playNowFromQueue(index) {
+    const item = queueRef.current.splice(index, 1)[0]
+    setQueue([...queueRef.current])
+    if (!item) return
+    demoQueuedRef.current = false
+    setAudioSrc(item.src)
+    setTrackInfo({ title: item.title || 'Track', artist: item.artist || '', album: item.album || '', cover: item.cover || null })
+    setHistory(h => [{ title: item.title || 'Track', artist: item.artist || '', album: item.album || '', cover: item.cover || null, src: item.src, playedAt: Date.now() }, ...h].slice(0, 20))
+    setTimeout(() => playerRef.current?.play(), 120)
+  }
+
+  function removeFromQueue(index) {
+    queueRef.current.splice(index, 1)
+    setQueue([...queueRef.current])
+  }
+
+  // Try to play immediately if player is idle; otherwise enqueue
+  function playOrQueueTrack(track) {
+    try {
+      const isPlaying = playerRef.current?.isPlaying?.() || false
+      if (!isPlaying) {
+        setAudioSrc(track.src)
+        setTrackInfo({ title: track.title || 'Track', artist: track.artist || '', album: track.album || '', cover: track.cover || null })
+        // mark demoQueuedRef false once a real track is set to play
+        demoQueuedRef.current = false
+        // record in history because we're playing immediately
+        setHistory(h => [{ title: track.title || 'Track', artist: track.artist || '', album: track.album || '', cover: track.cover || null, src: track.src, playedAt: Date.now() }, ...h].slice(0, 20))
+      } else {
+        enqueueTrack(track)
+      }
+    } catch (e) {
+      // fallback: enqueue
+      enqueueTrack(track)
+    }
+  }
 
   useEffect(() => {
     // Use raw.githubusercontent URLs so the browser receives the actual file bytes
@@ -42,8 +89,8 @@ function App() {
     })
   }, [])
 
-  // Track whether the queued demo was added so we avoid auto-playing it when onCanPlay fires.
-  const demoQueuedRef = useRef(true)
+  // Track whether the queued demo was added; set false so the default/demo track will autoplay when ready
+  const demoQueuedRef = useRef(false)
 
   const loaderMessages = [
     'Uploading photo…',
@@ -119,6 +166,74 @@ function App() {
     }
   }, [loading])
 
+  // When the cover changes, compute an average color and apply it as a CSS variable
+  useEffect(() => {
+    let cancelled = false
+    async function computeAndSet() {
+      const url = trackInfo?.cover
+      if (!url) {
+        // default tint (soft green)
+        try {
+          const root = document.getElementById('app-root')
+          root?.style.setProperty('--tint-rgb', '29,185,84')
+          // compute luminance and choose readable text color
+          const r0 = 29, g0 = 185, b0 = 84
+          const lum0 = 0.2126 * r0 + 0.7152 * g0 + 0.0722 * b0
+          root?.style.setProperty('--tint-text', lum0 > 150 ? '#0b0b0b' : '#ffffff')
+        } catch (e) {}
+        return
+      }
+      try {
+        const img = new Image()
+        img.crossOrigin = 'Anonymous'
+        img.src = url
+        await new Promise((res, rej) => {
+          img.onload = res
+          img.onerror = rej
+        })
+
+        // draw into small canvas to sample pixels quickly
+        const canvas = document.createElement('canvas')
+        const size = 64
+        canvas.width = size
+        canvas.height = size
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, size, size)
+        const data = ctx.getImageData(0, 0, size, size).data
+        let r = 0, g = 0, b = 0, count = 0
+        for (let i = 0; i < data.length; i += 4) {
+          const alpha = data[i+3]
+          if (alpha === 0) continue
+          r += data[i]
+          g += data[i+1]
+          b += data[i+2]
+          count++
+        }
+        if (count > 0 && !cancelled) {
+          r = Math.round(r / count)
+          g = Math.round(g / count)
+          b = Math.round(b / count)
+          const root = document.getElementById('app-root')
+          root?.style.setProperty('--tint-rgb', `${r}, ${g}, ${b}`)
+          // set readable header text color based on luminance
+          const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b
+          root?.style.setProperty('--tint-text', lum > 150 ? '#0b0b0b' : '#ffffff')
+        }
+      } catch (e) {
+        // If anything fails (CORS, decode), fallback to default tint
+        try {
+          const root = document.getElementById('app-root')
+          root?.style.setProperty('--tint-rgb', '29,185,84')
+          const r0 = 29, g0 = 185, b0 = 84
+          const lum0 = 0.2126 * r0 + 0.7152 * g0 + 0.0722 * b0
+          root?.style.setProperty('--tint-text', lum0 > 150 ? '#0b0b0b' : '#ffffff')
+        } catch (e) {}
+      }
+    }
+    computeAndSet()
+    return () => { cancelled = true }
+  }, [trackInfo && trackInfo.cover])
+
   async function fetchAndUseBlob(url) {
     if (!url) return
     try {
@@ -131,13 +246,12 @@ function App() {
       if (!mime.startsWith('audio/') && mime !== 'application/octet-stream') {
         throw new Error(`Downloaded file is not an audio type: ${mime}`)
       }
-      const obj = URL.createObjectURL(blob)
-      if (prevObjectUrl.current) try { URL.revokeObjectURL(prevObjectUrl.current) } catch (e) {}
-      prevObjectUrl.current = obj
-      setAudioSrc(obj)
-      // record in history using current trackInfo as a best-effort
-      setHistory(h => [{ title: trackInfo.title || 'Unknown', artist: trackInfo.artist || '', album: trackInfo.album || '', cover: trackInfo.cover || null, src: obj, playedAt: Date.now() }, ...h].slice(0, 20))
-      setSimLoading(true)
+  const obj = URL.createObjectURL(blob)
+  if (prevObjectUrl.current) try { URL.revokeObjectURL(prevObjectUrl.current) } catch (e) {}
+  prevObjectUrl.current = obj
+  // queue or play
+  playOrQueueTrack({ title: trackInfo.title || 'Unknown', artist: trackInfo.artist || '', album: trackInfo.album || '', cover: trackInfo.cover || null, src: obj })
+  setSimLoading(true)
     } catch (e) {
       console.error('Fallback fetch failed', e)
       setError(e.message)
@@ -157,21 +271,13 @@ function App() {
         const audioBlob = res.blob
         const md = res.metadata || {}
         setLastApiResponse({ type: 'audio-blob', metadata: md })
-        setTrackInfo({
-          title: md.title || 'Generated track',
-          artist: md.artist || '',
-          album: md.album || '',
-          cover: md.cover || null,
-        })
         const url = URL.createObjectURL(audioBlob)
         if (prevObjectUrl.current) {
           try { URL.revokeObjectURL(prevObjectUrl.current) } catch (e) {}
         }
         prevObjectUrl.current = url
-        setAudioSrc(url)
-        // add to history
-        setHistory(h => [{ title: md.title || 'Generated track', artist: md.artist || '', album: md.album || '', cover: md.cover || null, src: url, playedAt: Date.now() }, ...h].slice(0, 20))
-        setTimeout(() => playerRef.current?.play(), 100)
+  // queue or play depending on player state (playOrQueueTrack will set trackInfo if it plays immediately)
+  playOrQueueTrack({ title: md.title || 'Generated track', artist: md.artist || '', album: md.album || '', cover: md.cover || null, src: url })
         return
       }
 
@@ -183,15 +289,16 @@ function App() {
           const json = await res.json()
           setLastApiResponse(json)
           const fileUrl = json.file_url || json.url
-          if (fileUrl) {
+            if (fileUrl) {
             if (prevObjectUrl.current) {
               try { URL.revokeObjectURL(prevObjectUrl.current) } catch (e) {}
               prevObjectUrl.current = null
             }
-            setAudioSrc(fileUrl)
-            setHistory(h => [{ title: (json.track && json.track.name) || json.title || 'Generated track', artist: (json.track && json.track.artist) || json.artist || '', album: (json.track && json.track.album) || json.album || '', cover: json.cover || json.artwork || json.album_art || null, src: fileUrl, playedAt: Date.now() }, ...h].slice(0, 20))
-            setTrackInfo({ title: (json.track && json.track.name) || json.title || 'Generated track', artist: (json.track && json.track.artist) || json.artist || '', album: (json.track && json.track.album) || json.album || '', cover: json.cover || json.artwork || json.album_art || null })
-            setSimLoading(true)
+              // enqueue/play; only update trackInfo if player was idle and playOrQueueTrack started it immediately
+              const metadata = { title: (json.track && json.track.name) || json.title || 'Generated track', artist: (json.track && json.track.artist) || json.artist || '', album: (json.track && json.track.album) || json.album || '', cover: json.cover || json.artwork || json.album_art || null }
+              playOrQueueTrack({ ...metadata, src: fileUrl })
+              // if the player was idle, playOrQueueTrack will have set trackInfo; otherwise leave it alone
+              setSimLoading(true)
             return
           }
           setTrackInfo({ title: json.title || 'Generated track', artist: json.artist || '', album: json.album || '', cover: json.cover || json.artwork || json.album_art || null })
@@ -222,9 +329,7 @@ function App() {
             try { URL.revokeObjectURL(prevObjectUrl.current) } catch (e) {}
           }
           prevObjectUrl.current = url
-          setAudioSrc(url)
-          setHistory(h => [{ title: 'Generated track', artist: '', album: '', cover: null, src: url, playedAt: Date.now() }, ...h].slice(0, 20))
-          setTimeout(() => playerRef.current?.play(), 100)
+          playOrQueueTrack({ title: 'Generated track', artist: '', album: '', cover: null, src: url })
         }
       }
     } catch (e) {
@@ -310,26 +415,65 @@ function App() {
                   fetchAndUseBlob(audioSrc)
                 }
               }}
+              onPlay={() => {
+                // when playback starts, clear demo queued flag
+                demoQueuedRef.current = false
+              }}
+              onEnded={() => {
+                // when current track ends, dequeue next track if available
+                const next = queueRef.current.shift()
+                if (next) {
+                  setAudioSrc(next.src)
+                  setTrackInfo({ title: next.title || 'Track', artist: next.artist || '', album: next.album || '', cover: next.cover || null })
+                  setHistory(h => [{ title: next.title || 'Track', artist: next.artist || '', album: next.album || '', cover: next.cover || null, src: next.src, playedAt: Date.now() }, ...h].slice(0, 20))
+                  // small timeout to allow audio element src to settle
+                  setTimeout(() => playerRef.current?.play(), 120)
+                }
+              }}
             />
           </div>
 
           <aside className="history-card">
             <h3>Previously played</h3>
-            {history.length === 0 ? (
-              <div className="history-empty">No tracks played yet</div>
+            {/* Show the track that played immediately before the current one (history[1]) */}
+            {(!history || history.length <= 1) ? (
+              <div className="history-empty">No previous track</div>
             ) : (
               <ul className="history-list">
-                {history.map((item, idx) => (
-                  <li key={item.playedAt || idx} className="history-item" onClick={() => { setAudioSrc(item.src); playerRef.current?.seek(0); playerRef.current?.play() }}>
-                    <div className="history-cover" style={{ backgroundImage: item.cover ? `url(${item.cover})` : undefined }} />
-                    <div className="history-meta">
-                      <div className="history-title">{item.title}</div>
-                      <div className="history-artist">{item.artist}</div>
-                    </div>
-                  </li>
-                ))}
+                {(() => {
+                  const prev = history[1]
+                  return (
+                    <li key={prev.playedAt || 1} className="history-item" onClick={() => { playAtIndex(1) }}>
+                      <div className="history-cover" style={{ backgroundImage: prev.cover ? `url(${prev.cover})` : undefined }} />
+                      <div className="history-meta">
+                        <div className="history-title">{prev.title}</div>
+                        <div className="history-artist">{prev.artist}</div>
+                      </div>
+                    </li>
+                  )
+                })()}
               </ul>
             )}
+
+            <div style={{ marginTop: '1rem' }}>
+              <h3>Up Next</h3>
+              {queue.length === 0 ? (
+                <div className="history-empty">No tracks queued</div>
+              ) : (
+                <ul className="history-list">
+                  {queue.slice(0,1).map((item, idx) => (
+                    <li key={`${item.src}-${idx}`} className="history-item queue-item" title={`${item.title || 'Track'} — ${item.artist || ''}`} aria-label={`Queued: ${item.title || 'Track'} by ${item.artist || ''}`}>
+                      {/* only show cover for queue items; title/artist available via tooltip (title attribute) for accessibility */}
+                      <div className="history-cover queue-only-cover" style={{ backgroundImage: item.cover ? `url(${item.cover})` : undefined }} />
+                      <div className="action-group">
+                          <button className="boxed-btn" title="Play now" onClick={() => playNowFromQueue(idx)} aria-label="Play now"><PlayIcon size={22} color="#ffffff" /></button>
+                          <button className="boxed-btn" title="Remove from queue" onClick={() => removeFromQueue(idx)} aria-label="Remove"><RemoveIcon size={20} color="#ffffff" /></button>
+                        </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </aside>
 
           {/* <div className="debug-card">

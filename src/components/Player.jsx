@@ -1,7 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState, useEffect } from 'react'
 import { PlayIcon, PauseIcon, VolumeIcon, MuteIcon, PrevIcon, NextIcon } from './Icons'
 
-const Player = forwardRef(function Player({ src, title, artist, album, cover, loading = false, onCanPlay, onError, history = [], onPlayPrevious, onPlayNext }, ref) {
+const Player = forwardRef(function Player({ src, title, artist, album, cover, loading = false, onCanPlay, onError, onPlay, onPause, onEnded, history = [], onPlayPrevious, onPlayNext }, ref) {
   const audioRef = useRef(null)
   const [playing, setPlaying] = useState(false)
   const [duration, setDuration] = useState(0)
@@ -15,7 +15,10 @@ const Player = forwardRef(function Player({ src, title, artist, album, cover, lo
   useImperativeHandle(ref, () => ({
     play: () => audioRef.current?.play(),
     pause: () => audioRef.current?.pause(),
-    seek: (t) => { if (audioRef.current) audioRef.current.currentTime = t }
+    seek: (t) => { if (audioRef.current) audioRef.current.currentTime = t },
+    isPlaying: () => !!playing,
+    getCurrentTime: () => audioRef.current ? (audioRef.current.currentTime || 0) : 0,
+    getDuration: () => audioRef.current ? (audioRef.current.duration || 0) : 0
   }))
 
   useEffect(() => {
@@ -211,8 +214,9 @@ const Player = forwardRef(function Player({ src, title, artist, album, cover, lo
         ref={audioRef}
         src={src}
         style={{ display: 'none' }}
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
+        onPlay={() => { setPlaying(true); onPlay && onPlay() }}
+        onPause={() => { setPlaying(false); onPause && onPause() }}
+        onEnded={() => { setPlaying(false); onEnded && onEnded() }}
         onCanPlay={() => onCanPlay && onCanPlay()}
         onLoadedMetadata={handleLoadedMetadata}
         onProgress={() => updateBuffered()}
