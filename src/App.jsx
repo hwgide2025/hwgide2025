@@ -132,6 +132,29 @@ function App() {
     }
   }
 
+  function playAtIndex(i) {
+    const item = history[i]
+    if (!item) return
+    setAudioSrc(item.src)
+    setTrackInfo({ title: item.title || 'Track', artist: item.artist || '', album: item.album || '', cover: item.cover || null })
+    setTimeout(() => playerRef.current?.play(), 100)
+  }
+
+  function playPrevious() {
+    // find current index in history and play the next older item
+    const idx = history.findIndex(h => h.src === audioSrc)
+    if (idx === -1) return
+    const nextIdx = Math.min(history.length - 1, idx + 1)
+    playAtIndex(nextIdx)
+  }
+
+  function playNext() {
+    const idx = history.findIndex(h => h.src === audioSrc)
+    if (idx === -1) return
+    const prevIdx = Math.max(0, idx - 1)
+    playAtIndex(prevIdx)
+  }
+
   return (
     <div id="app-root" className="app-root">
       <main className="main">
@@ -160,6 +183,9 @@ function App() {
               artist={trackInfo.artist}
               album={trackInfo.album}
               cover={trackInfo.cover}
+              history={history}
+              onPlayPrevious={playPrevious}
+              onPlayNext={playNext}
               loading={simLoading}
               onCanPlay={() => { setSimLoading(false); setLoading(false); playerRef.current?.play() }}
               onError={(err) => {

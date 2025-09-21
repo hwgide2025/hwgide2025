@@ -1,7 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState, useEffect } from 'react'
-import { PlayIcon, PauseIcon, VolumeIcon, MuteIcon } from './Icons'
+import { PlayIcon, PauseIcon, VolumeIcon, MuteIcon, PrevIcon, NextIcon } from './Icons'
 
-const Player = forwardRef(function Player({ src, title, artist, album, cover, loading = false, onCanPlay, onError }, ref) {
+const Player = forwardRef(function Player({ src, title, artist, album, cover, loading = false, onCanPlay, onError, history = [], onPlayPrevious, onPlayNext }, ref) {
   const audioRef = useRef(null)
   const [playing, setPlaying] = useState(false)
   const [duration, setDuration] = useState(0)
@@ -126,6 +126,10 @@ const Player = forwardRef(function Player({ src, title, artist, album, cover, lo
 
   return (
     <div className="player player-ref">
+      {/* blurred backdrop using the cover artwork */}
+      <div className={`player-blur ${playing ? 'playing' : ''}`} style={{ backgroundImage: cover ? `url(${cover})` : undefined }} />
+        <div className="player-overlay" />
+      <div className="player-inner">
       <div className="player-top">
         <div className="player-art" style={{ backgroundImage: cover ? `url(${cover})` : undefined }} />
         <div className="player-meta">
@@ -137,7 +141,7 @@ const Player = forwardRef(function Player({ src, title, artist, album, cover, lo
 
       <div className="player-center">
         <div className="center-controls">
-          <button className="small-btn prev-btn" aria-label="Previous">◀◀</button>
+          <button className="small-btn prev-btn" aria-label="Previous" onClick={() => props?.onPlayPrevious && props.onPlayPrevious()}><PrevIcon size={22} color="#dcdcdc" /></button>
 
           <button
             className={`play-btn large ${playing ? 'playing' : ''}`}
@@ -152,7 +156,7 @@ const Player = forwardRef(function Player({ src, title, artist, album, cover, lo
             {playing ? <PauseIcon size={34} color="#022" /> : <PlayIcon size={34} color="#022" />}
           </button>
 
-          <button className="small-btn next-btn" aria-label="Next">▶▶</button>
+          <button className="small-btn next-btn" aria-label="Next" onClick={() => props?.onPlayNext && props.onPlayNext()}><NextIcon size={22} color="#dcdcdc" /></button>
         </div>
       </div>
 
@@ -211,6 +215,7 @@ const Player = forwardRef(function Player({ src, title, artist, album, cover, lo
           onError && onError(msg)
         }}
       />
+      </div>
       </div>
     </div>
   )

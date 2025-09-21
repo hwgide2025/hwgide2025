@@ -64,7 +64,7 @@ body { overflow: hidden; }
 .main-header h1 { margin: 0 0 0.25rem 0 }
 .content-grid { display: grid; grid-template-columns: 28% 1fr 220px; gap: 1rem; align-items: start }
 
-.capture-card, .player-card, .history-card { background: #181818; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.6) }
+.capture-card, .player-card, .history-card { position: relative; background: #181818; padding: 1rem; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.6); overflow: hidden }
 
 .capture-card { max-width: 28vw }
 
@@ -83,6 +83,10 @@ body { overflow: hidden; }
 .controls { display:flex; gap:0.5rem; }
 .capture-btn { background: #1db954; color: #fff; border: none; padding: 0.6rem 1rem; border-radius: 20px; cursor: pointer }
 .capture-btn:disabled { opacity: 0.6; cursor: not-allowed }
+
+/* make the capture button match the play button gradient */
+.capture-btn { background: linear-gradient(90deg,#1db954,#61dafb); color: #022; font-weight:700; padding: 0.6rem 1.1rem; border-radius: 22px; box-shadow: 0 6px 18px rgba(0,0,0,0.4) }
+
 
 .overlay { position: absolute; left:0; right:0; top:0; bottom:0; display:flex; align-items:center; justify-content:center; color: #fff }
 .error { color: #ff6b6b }
@@ -148,7 +152,11 @@ body { overflow: hidden; }
 .player-controls-spacer { flex:1 }
 
 /* Reference-style player layout */
-.player-ref { padding: 1rem; display:flex; flex-direction:column; gap:12px }
+.player-ref { padding: 1rem; display:flex; flex-direction:column; gap:12px; border-radius: inherit; position: relative; overflow: hidden }
+.player-inner { position: relative; z-index: 2; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius: inherit; padding: 1rem; backdrop-filter: none }
+.player-blur { position: absolute; inset: 0; z-index: 1; background-size: cover; background-position: center; filter: blur(18px) saturate(120%); opacity: 0.12; border-radius: inherit; transition: opacity 300ms ease, transform 600ms cubic-bezier(.2,.9,.2,1); pointer-events: none; will-change: transform, opacity }
+.player-blur.playing { opacity: 0.22; transform: scale(1.02) }
+.player-overlay { position:absolute; inset:0; z-index:1; pointer-events:none; background: linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.35)); border-radius:inherit }
 .player-top { display:flex; gap:12px; align-items:center; flex-direction:column; justify-content:center }
 .player-art { width:220px; height:220px; background: linear-gradient(135deg,#333,#111); border-radius:8px; background-size:cover; background-position:center; box-shadow: 0 8px 20px rgba(0,0,0,0.6) }
 .player-meta { flex:1; text-align:center; margin-top: 6px }
