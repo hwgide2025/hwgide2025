@@ -293,13 +293,13 @@ function App() {
             )}
           </aside>
 
-          <div className="debug-card">
+          {/* <div className="debug-card">
             <h3>Debug</h3>
             <div><strong>API response:</strong></div>
             <pre className="debug-pre">{lastApiResponse ? JSON.stringify(lastApiResponse, null, 2) : '—'}</pre>
             <div><strong>Audio src:</strong> {audioSrc ? (<a href={audioSrc} target="_blank" rel="noreferrer">{audioSrc}</a>) : '—'}</div>
             <div><strong>Audio error:</strong> {audioError || '—'}</div>
-          </div>
+          </div> */}
         </section>
       </main>
     </div>

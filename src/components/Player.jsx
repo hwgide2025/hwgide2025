@@ -189,11 +189,29 @@ const Player = forwardRef(function Player({ src, title, artist, album, cover, lo
 
         <div className="bottom-controls">
           <div className="volume-block">
-            <button className="mute-btn" onClick={() => setMuted(!muted)} aria-label={muted ? 'Unmute' : 'Mute'}>
-              {muted ? <MuteIcon size={18} color="#eaeaea" /> : <VolumeIcon size={18} color="#eaeaea" />}
-            </button>
-            <input className="volume-slider" type="range" min="0" max="1" step="0.01" value={muted ? 0 : volume} onChange={(e) => { setVolume(parseFloat(e.target.value)); setMuted(false) }} aria-label="Volume" />
-          </div>
+              <button className="mute-btn" onClick={() => setMuted(!muted)} aria-label={muted ? 'Unmute' : 'Mute'}>
+                {muted ? <MuteIcon size={18} color="#eaeaea" /> : <VolumeIcon size={20} color="#eaeaea" level={muted ? 0 : volume} />}
+              </button>
+              {/**
+               * Use an inline background on the range input so the left (filled) portion
+               * shows the play-button gradient and the remainder shows the muted track.
+               * This keeps the slider visually consistent with the play button and
+               * updates as `volume` changes.
+               */}
+              <input
+                className="volume-slider"
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={muted ? 0 : volume}
+                onChange={(e) => { setVolume(parseFloat(e.target.value)); setMuted(false) }}
+                aria-label="Volume"
+                style={{
+                  background: `linear-gradient(90deg, #1db954 0%, #61dafb ${Math.round((muted ? 0 : volume) * 100)}%, rgba(255,255,255,0.06) ${Math.round((muted ? 0 : volume) * 100)}%)`
+                }}
+              />
+            </div>
         </div>
 
       <audio
