@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import './App.css'
 import Player from './components/Player'
 import WebcamCapture from './components/WebcamCapture'
@@ -9,12 +9,33 @@ function App() {
   const [trackInfo, setTrackInfo] = useState({ title: 'No track', artist: '', album: '', cover: null })
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(false)
+  const [loaderIndex, setLoaderIndex] = useState(0)
   const [simLoading, setSimLoading] = useState(false)
   const [lastApiResponse, setLastApiResponse] = useState(null)
   const [audioError, setAudioError] = useState(null)
   const [error, setError] = useState(null)
   const playerRef = useRef()
   const prevObjectUrl = useRef(null)
+
+  const loaderMessages = [
+    'Uploading photo…',
+    'Analyzing image…',
+    'Calculating optimal song…',
+    'Composing melody…',
+    'Loading song…',
+  ]
+
+  useEffect(() => {
+    if (!loading) {
+      setLoaderIndex(0)
+      return
+    }
+    setLoaderIndex(0)
+    const id = setInterval(() => {
+      setLoaderIndex(i => (i + 1) % loaderMessages.length)
+    }, 3000)
+    return () => clearInterval(id)
+  }, [loading])
 
   async function fetchAndUseBlob(url) {
     if (!url) return
@@ -169,7 +190,7 @@ function App() {
             {loading && (
               <div className="overlay upload-overlay">
                 <div className="spinner" />
-                <div className="upload-text">Uploading photo…</div>
+                <div className="upload-text">{loaderMessages[loaderIndex]}</div>
               </div>
             )}
             {error && <div className="error">{error}</div>}
