@@ -123,6 +123,28 @@ body { overflow: hidden; }
 .upload-text { transition: opacity 300ms ease; opacity: 1 }
 .upload-text.fade-out { opacity: 0 }
 
+/* Typewriter caret and monospace feel for upload messages */
+.upload-text.typewriter { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace; letter-spacing: 0.02em }
+.upload-text.typewriter::after {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 1.05em;
+  margin-left: 6px;
+  vertical-align: middle;
+  background: linear-gradient(90deg, #ffffff 0%, rgba(255,255,255,0) 60%);
+  animation: caret-blink 1s steps(1) infinite;
+}
+
+@keyframes caret-blink {
+  0%, 49% { opacity: 1 }
+  50%, 100% { opacity: 0 }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .upload-text.typewriter::after { animation: none; opacity: 1 }
+}
+
 @keyframes spin { to { transform: rotate(360deg) } }
 
 /* Time row */
@@ -131,14 +153,14 @@ body { overflow: hidden; }
 
 .controls-row { display:flex; align-items:center; gap:12px; margin-top:12px }
 .controls-row.centered { justify-content: center }
-.play-btn { background: linear-gradient(90deg,#1db954,#61dafb); border:none; color:#022; font-weight:700; width:64px; height:64px; border-radius:999px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow: 0 6px 18px rgba(0,0,0,0.5); transition: transform 120ms ease, box-shadow 120ms ease; padding: 6px }
+.play-btn { background: linear-gradient(90deg,#1db954,#61dafb); border:none; color:#022; font-weight:700; width:48px; height:48px; border-radius:999px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow: 0 6px 18px rgba(0,0,0,0.5); transition: transform 120ms ease, box-shadow 120ms ease; padding: 4px }
 .play-btn.playing { transform: scale(1.05); }
 .play-btn:active { transform: scale(0.96); box-shadow: 0 4px 10px rgba(0,0,0,0.4) }
 .play-btn.playing::after {
   content: '';
   position: absolute;
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   left: 50%;
   top: 50%;
@@ -184,7 +206,7 @@ body { overflow: hidden; }
 .player-album { color:#9aa3a3; font-size:0.95rem }
 
 .player-center { display:flex; justify-content:center; align-items:center }
-.center-controls { display:flex; gap:32px; align-items:center; justify-content:center }
+.center-controls { display:flex; gap:32px; align-items:center; justify-content:center; padding: 8px 0; }
 .small-btn { background: transparent; color:#cfcfcf; border: none; font-size:20px; cursor: pointer }
 .small-btn.prev-btn, .small-btn.next-btn {
   width: 50px;
@@ -201,7 +223,7 @@ body { overflow: hidden; }
 .small-btn.prev-btn:hover, .small-btn.next-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0,0,0,0.6) }
 .small-btn.prev-btn:active, .small-btn.next-btn:active { transform: translateY(0); box-shadow: 0 6px 12px rgba(0,0,0,0.5) }
 .small-btn.prev-btn[disabled], .small-btn.next-btn[disabled] { opacity: 0.45; cursor: default; transform: none }
-.play-btn.large { width:70px; height:70px; padding:4px; box-shadow: 0 8px 18px rgba(0,0,0,0.55) }
+.play-btn.large { width:48px; height:48px; padding:4px; box-shadow: 0 6px 14px rgba(0,0,0,0.45) }
 
 .player-bottom { display:flex; flex-direction:column; gap:8px }
 .progress-row { display:flex; align-items:center; gap:12px }

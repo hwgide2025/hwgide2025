@@ -10,6 +10,7 @@ function App() {
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(false)
   const [loaderIndex, setLoaderIndex] = useState(0)
+  const [typedText, setTypedText] = useState('')
   const [simLoading, setSimLoading] = useState(false)
   const [lastApiResponse, setLastApiResponse] = useState(null)
   const [audioError, setAudioError] = useState(null)
@@ -24,17 +25,71 @@ function App() {
     'Composing melody…',
     'Loading song…',
   ]
+  // Refs to keep timers so we can clear them reliably
+  const typingIntervalRef = useRef(null)
+  const messageTimeoutRef = useRef(null)
 
+  // Typewriter effect: progressively reveal characters for the current loader message,
+  // then pause and advance to the next message while `loading` is true.
   useEffect(() => {
+    function clearTimers() {
+      if (typingIntervalRef.current) { clearInterval(typingIntervalRef.current); typingIntervalRef.current = null }
+      if (messageTimeoutRef.current) { clearTimeout(messageTimeoutRef.current); messageTimeoutRef.current = null }
+    }
+
     if (!loading) {
+      clearTimers()
       setLoaderIndex(0)
+      setTypedText('')
       return
     }
-    setLoaderIndex(0)
-    const id = setInterval(() => {
-      setLoaderIndex(i => (i + 1) % loaderMessages.length)
-    }, 3000)
-    return () => clearInterval(id)
+
+    // Configuration: pause after fully typed message
+    const pauseAfterTyped = 1200
+
+    let active = true
+
+    // compute next index with simple wrap (include index 0 in rotation)
+    const computeNext = (idx) => {
+      const L = loaderMessages.length
+      if (L <= 1) return 0
+      return (idx + 1) % L
+    }
+
+    const typeMessage = (idx) => {
+      if (!active) return
+      clearTimers()
+      const msg = loaderMessages[idx] || ''
+      // slower typing: ms per char (longer = slower). Increased base to slow down animation.
+      const speed = Math.max(60, Math.floor(140 - Math.min(80, msg.length)))
+
+      let pos = 0
+      setTypedText('')
+      typingIntervalRef.current = setInterval(() => {
+        if (!active) return
+        pos += 1
+        setTypedText(msg.slice(0, pos))
+        if (pos >= msg.length) {
+          clearTimers()
+          // keep the fully typed message visible for a moment, then advance to next and type it
+          messageTimeoutRef.current = setTimeout(() => {
+            if (!active) return
+            const next = computeNext(idx)
+            setLoaderIndex(next)
+            setTypedText('')
+            typeMessage(next)
+          }, pauseAfterTyped)
+        }
+      }, speed)
+    }
+
+    // Start typing from the current loaderIndex (default 0) and cycle normally including index 0
+    typeMessage(loaderIndex || 0)
+
+    return () => {
+      active = false
+      clearTimers()
+    }
   }, [loading])
 
   async function fetchAndUseBlob(url) {
@@ -190,7 +245,7 @@ function App() {
             {loading && (
               <div className="overlay upload-overlay">
                 <div className="spinner" />
-                <div className="upload-text">{loaderMessages[loaderIndex]}</div>
+                <div className={`upload-text typewriter`}>{typedText || ''}</div>
               </div>
             )}
             {error && <div className="error">{error}</div>}

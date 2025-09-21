@@ -155,7 +155,7 @@ const Player = forwardRef(function Player({ src, title, artist, album, cover, lo
               else { a.play().catch(()=>{}); setPlaying(true) }
             }}
           >
-            {playing ? <PauseIcon size={24} color="#022" /> : <PlayIcon size={24} color="#022" />}
+            {playing ? <PauseIcon size={32} color="#022" /> : <PlayIcon size={32} color="#022" />}
           </button>
 
           <button className="small-btn next-btn" aria-label="Next" onClick={() => onPlayNext && onPlayNext()} disabled={!onPlayNext}>
