@@ -18,6 +18,33 @@ function App() {
   const playerRef = useRef()
   const prevObjectUrl = useRef(null)
 
+  useEffect(() => {
+    // Use raw.githubusercontent URLs so the browser receives the actual file bytes
+    const demoUrl = 'https://raw.githubusercontent.com/heszes/storagehwgide/main/Darude_Sandstorm.mp3'
+    const demoCover = 'https://raw.githubusercontent.com/heszes/storagehwgide/main/Sandstorm_single.jpg'
+    const demoTrack = {
+      title: 'Sandstorm',
+      artist: 'Darude',
+      album: 'Before the Storm',
+      cover: demoCover,
+      src: demoUrl,
+      playedAt: Date.now()
+    }
+    // Only set if nothing is already queued
+  setAudioSrc(s => s || demoUrl)
+    setTrackInfo(t => (t && t.title && t.title !== 'No track') ? t : { title: demoTrack.title, artist: demoTrack.artist, album: demoTrack.album, cover: demoTrack.cover })
+    setHistory(h => {
+      // If history is empty or doesn't already include the demo, prepend it
+      if (!h || h.length === 0 || !h.find(it => it.src === demoUrl)) {
+        return [demoTrack, ...(h || [])].slice(0, 20)
+      }
+      return h
+    })
+  }, [])
+
+  // Track whether the queued demo was added so we avoid auto-playing it when onCanPlay fires.
+  const demoQueuedRef = useRef(true)
+
   const loaderMessages = [
     'Uploading photo…',
     'Analyzing image…',
@@ -235,8 +262,8 @@ function App() {
     <div id="app-root" className="app-root">
       <main className="main">
         <header className="main-header">
-          <h1>Capture & Generate</h1>
-          <p>Use your webcam to send a photo to the API and play the returned audio.</p>
+          <h1>EchoFrame</h1>
+          <p>Take a photo, get a song</p>
         </header>
 
         <section className="content-grid">
@@ -263,7 +290,19 @@ function App() {
               onPlayPrevious={playPrevious}
               onPlayNext={playNext}
               loading={simLoading}
-              onCanPlay={() => { setSimLoading(false); setLoading(false); playerRef.current?.play() }}
+              onCanPlay={() => {
+                setSimLoading(false);
+                setLoading(false);
+                // Only auto-play if the audio wasn't the initial queued demo
+                try {
+                  const currentSrc = audioSrc || ''
+                  if (!currentSrc.includes('raw.githubusercontent.com') || !demoQueuedRef.current) {
+                    playerRef.current?.play()
+                  }
+                } catch (e) {
+                  // ignore
+                }
+              }}
               onError={(err) => {
                 setAudioError(err); setSimLoading(false); setLoading(false)
                 // If unsupported format, try fetching as blob and playing via object URL (may work around some server issues)

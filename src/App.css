@@ -12,8 +12,9 @@ html, body { height: 100%; margin: 0; padding: 0; }
 
 /* Ensure the page itself doesn't create an extra scrollbar; let .main handle scrolling */
 /* keep the page itself fixed and use the app main for scrolling */
-html, body, #root { height: 100%; margin: 0; }
-body { overflow: hidden; }
+html, body, #root { min-height: 100%; margin: 0; }
+/* allow the page to scroll vertically when content exceeds the viewport */
+body { overflow-y: auto; }
 
 .logo {
   height: 6em;
@@ -55,12 +56,12 @@ body { overflow: hidden; }
 .app-root {
   display: flex;
   width: 100%; /* avoid 100vw which can cause horizontal overflow */
-  height: 100vh;
+  min-height: 100vh; /* allow content to grow beyond the initial viewport */
   font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
 }
 .content-grid { display: grid; grid-template-columns: 1fr 420px 260px; gap: 1.5rem; align-items: start }
 
-.main { flex:1; padding: 0.75rem; background: linear-gradient(180deg,#121212,#0b0b0b); color: #eaeaea; overflow: hidden; }
+.main { flex:1; padding: 0.75rem; background: linear-gradient(180deg,#121212,#0b0b0b); color: #eaeaea; overflow: visible; }
 .main-header h1 { margin: 0 0 0.25rem 0 }
 .content-grid { display: grid; grid-template-columns: 28% 1fr 220px; gap: 1rem; align-items: start }
 

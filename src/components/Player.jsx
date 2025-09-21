@@ -126,7 +126,6 @@ const Player = forwardRef(function Player({ src, title, artist, album, cover, lo
 
   return (
     <div className="player player-ref">
-      {/* blurred backdrop using the cover artwork */}
       <div className={`player-blur ${playing ? 'playing' : ''}`} style={{ backgroundImage: cover ? `url(${cover})` : undefined }} />
         <div className="player-overlay" />
       <div className="player-inner">
@@ -192,12 +191,6 @@ const Player = forwardRef(function Player({ src, title, artist, album, cover, lo
               <button className="mute-btn" onClick={() => setMuted(!muted)} aria-label={muted ? 'Unmute' : 'Mute'}>
                 {muted ? <MuteIcon size={18} color="#eaeaea" /> : <VolumeIcon size={20} color="#eaeaea" level={muted ? 0 : volume} />}
               </button>
-              {/**
-               * Use an inline background on the range input so the left (filled) portion
-               * shows the play-button gradient and the remainder shows the muted track.
-               * This keeps the slider visually consistent with the play button and
-               * updates as `volume` changes.
-               */}
               <input
                 className="volume-slider"
                 type="range"
