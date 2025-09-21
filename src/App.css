@@ -13,7 +13,8 @@ html, body { height: 100%; margin: 0; padding: 0; }
 /* Ensure the page itself doesn't create an extra scrollbar; let .main handle scrolling */
 /* keep the page itself fixed and use the app main for scrolling */
 html, body, #root { height: 100%; margin: 0; }
-body { overflow: hidden; }
+/* prevent horizontal scrolling while allowing vertical scrolling in .main */
+body { overflow-x: hidden; }
 
 .logo {
   height: 6em;
@@ -60,16 +61,22 @@ body { overflow: hidden; }
 }
 .content-grid { display: grid; grid-template-columns: 1fr 420px 260px; gap: 1.5rem; align-items: start }
 
-.main { flex:1; padding: 0.75rem; background: linear-gradient(180deg,#121212,#0b0b0b); color: #eaeaea; overflow: hidden; }
+.main { flex:1; padding: 0.75rem; background: linear-gradient(180deg,#121212,#0b0b0b); color: #eaeaea; overflow: auto; }
 .main-header h1 { margin: 0 0 0.25rem 0 }
-.content-grid { display: grid; grid-template-columns: 28% 1fr 220px; gap: 1rem; align-items: start }
+.content-grid { display: grid; /* set minimum widths for right columns (webcam + history) */ grid-template-columns: 2fr minmax(560px, 1fr) minmax(560px, 1fr); gap: 1rem; align-items: start }
+
+/* Layout tweaks: put the webcam capture in the right sidebar above the history list */
+.capture-card { grid-column: 3 / 4; grid-row: 1 }
+.player-card { grid-column: 1 / 2; grid-row: 1 }
+.history-card { grid-column: 3 / 4; grid-row: 2 }
+.debug-card { grid-column: 3 / 4; grid-row: 3 }
 
 .capture-card, .player-card, .history-card { position: relative; background: #181818; padding: 1rem; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.6); overflow: hidden }
 
-.capture-card { max-width: 28vw }
+.capture-card { max-height: calc(100vh - 4rem); overflow: auto }
 
 .webcam-capture { display:flex; flex-direction:column; gap:0.5rem; align-items:center }
-.webcam-video { background: #000; width:100%; max-width: 100%; border-radius:6px; aspect-ratio: 16 / 9; max-height: 30vh; height: auto; }
+.webcam-video { background: #000; width:100%; max-width: 100%; border-radius:6px; aspect-ratio: 16 / 9; max-height: 50vh; height: auto; }
 
 /* Ensure the webcam container keeps a consistent aspect ratio on small screens */
 .webcam-capture { display:flex; flex-direction:column; gap:0.5rem; align-items:center }
@@ -79,6 +86,19 @@ body { overflow: hidden; }
   .history-card, .debug-card { order: 3 }
   .player-card { order: 2 }
   .capture-card { order: 1 }
+  /* Reset explicit grid placement on small screens */
+  .capture-card, .player-card, .history-card, .debug-card { grid-column: auto; grid-row: auto }
+}
+
+/* Collapse to a stacked layout when the viewport is narrower than the right-column minimums */
+@media (max-width: 1400px) {
+  .content-grid { grid-template-columns: 1fr; }
+  /* Reset explicit grid placement when stacking so cards flow vertically */
+  .capture-card, .player-card, .history-card, .debug-card { grid-column: auto; grid-row: auto }
+  /* Visual order when stacked: webcam (capture) on top, then player, then history */
+  .capture-card { order: 1 }
+  .player-card { order: 2 }
+  .history-card { order: 3 }
 }
 .controls { display:flex; gap:0.5rem; }
 .capture-btn { background: #1db954; color: #fff; border: none; padding: 0.6rem 1rem; border-radius: 20px; cursor: pointer }
@@ -133,8 +153,8 @@ body { overflow: hidden; }
 .play-btn.playing::after {
   content: '';
   position: absolute;
-  width: 64px;
-  height: 64px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   left: 50%;
   top: 50%;
@@ -167,13 +187,17 @@ body { overflow: hidden; }
 .player-controls-spacer { flex:1 }
 
 /* Reference-style player layout */
-.player-ref { padding: 1rem; display:flex; flex-direction:column; gap:12px; border-radius: inherit; position: relative; overflow: hidden }
+.player-ref { padding: 1rem; display:flex; flex-direction:column; gap:12px; border-radius: inherit; position: relative; overflow: visible }
+.player-card { padding-left: 3rem }
 .player-inner { position: relative; z-index: 2; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius: inherit; padding: 1rem; backdrop-filter: none }
-.player-blur { position: absolute; inset: 0; z-index: 1; background-size: cover; background-position: center; filter: blur(18px) saturate(120%); opacity: 0.12; border-radius: inherit; transition: opacity 300ms ease, transform 600ms cubic-bezier(.2,.9,.2,1); pointer-events: none; will-change: transform, opacity }
+.player-blur { position: absolute; inset: 0; z-index: 0; background-size: cover; background-position: center; filter: blur(18px) saturate(120%); opacity: 0.12; border-radius: inherit; transition: opacity 300ms ease, transform 600ms cubic-bezier(.2,.9,.2,1); pointer-events: none; will-change: transform, opacity }
+
+/* ensure the history card sits above the player blur if overlapping */
+.history-card { z-index: 2 }
 .player-blur.playing { opacity: 0.22; transform: scale(1.02) }
 .player-overlay { position:absolute; inset:0; z-index:1; pointer-events:none; background: linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.35)); border-radius:inherit }
 .player-top { display:flex; gap:12px; align-items:center; flex-direction:column; justify-content:center }
-.player-art { width:220px; height:220px; background: linear-gradient(135deg,#333,#111); border-radius:8px; background-size:cover; background-position:center; box-shadow: 0 8px 20px rgba(0,0,0,0.6) }
+.player-art { width:300px; height:300px; background: linear-gradient(135deg,#333,#111); border-radius:8px; background-size:cover; background-position:center; box-shadow: 0 8px 20px rgba(0,0,0,0.6) }
 .player-meta { flex:1; text-align:center; margin-top: 6px }
 .player-title { font-size:1.6rem; font-weight:800 }
 .player-artist { color:#bdbdbd; font-size:1rem; margin-top:4px }
@@ -197,7 +221,7 @@ body { overflow: hidden; }
 .small-btn.prev-btn:hover, .small-btn.next-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0,0,0,0.6) }
 .small-btn.prev-btn:active, .small-btn.next-btn:active { transform: translateY(0); box-shadow: 0 6px 12px rgba(0,0,0,0.5) }
 .small-btn.prev-btn[disabled], .small-btn.next-btn[disabled] { opacity: 0.45; cursor: default; transform: none }
-.play-btn.large { width:70px; height:70px; padding:4px; box-shadow: 0 8px 18px rgba(0,0,0,0.55) }
+.play-btn.large { width:96px; height:96px; padding:8px; box-shadow: 0 10px 26px rgba(0,0,0,0.6) }
 
 .player-bottom { display:flex; flex-direction:column; gap:8px }
 .progress-row { display:flex; align-items:center; gap:12px }
