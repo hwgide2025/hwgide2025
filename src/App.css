@@ -1,0 +1,176 @@
+
+/* global box-sizing and root sizing so app fills the viewport without an inner "window" */
+* { box-sizing: border-box }
+html, body { height: 100%; margin: 0; padding: 0; }
+#root {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0; /* remove outer site padding for full-bleed */
+  text-align: center;
+}
+
+/* Ensure the page itself doesn't create an extra scrollbar; let .main handle scrolling */
+/* keep the page itself fixed and use the app main for scrolling */
+html, body, #root { height: 100%; margin: 0; }
+body { overflow: hidden; }
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* New app layout */
+.app-root {
+  display: flex;
+  width: 100%; /* avoid 100vw which can cause horizontal overflow */
+  height: 100vh;
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+}
+.content-grid { display: grid; grid-template-columns: 1fr 420px 260px; gap: 1.5rem; align-items: start }
+
+.main { flex:1; padding: 0.75rem; background: linear-gradient(180deg,#121212,#0b0b0b); color: #eaeaea; overflow: hidden; }
+.main-header h1 { margin: 0 0 0.25rem 0 }
+.content-grid { display: grid; grid-template-columns: 28% 1fr 220px; gap: 1rem; align-items: start }
+
+.capture-card, .player-card, .history-card { background: #181818; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.6) }
+
+.capture-card { max-width: 28vw }
+
+.webcam-capture { display:flex; flex-direction:column; gap:0.5rem; align-items:center }
+.webcam-video { background: #000; width:100%; max-width: 100%; border-radius:6px; aspect-ratio: 16 / 9; max-height: 30vh; height: auto; }
+
+/* Ensure the webcam container keeps a consistent aspect ratio on small screens */
+.webcam-capture { display:flex; flex-direction:column; gap:0.5rem; align-items:center }
+
+@media (max-width: 900px) {
+  .content-grid { grid-template-columns: 1fr; }
+  .history-card, .debug-card { order: 3 }
+  .player-card { order: 2 }
+  .capture-card { order: 1 }
+}
+.controls { display:flex; gap:0.5rem; }
+.capture-btn { background: #1db954; color: #fff; border: none; padding: 0.6rem 1rem; border-radius: 20px; cursor: pointer }
+.capture-btn:disabled { opacity: 0.6; cursor: not-allowed }
+
+.overlay { position: absolute; left:0; right:0; top:0; bottom:0; display:flex; align-items:center; justify-content:center; color: #fff }
+.error { color: #ff6b6b }
+
+.player { display:flex; flex-direction:column; gap:1rem }
+.track-info { display:flex; gap:1rem; align-items:center }
+.cover { width:72px; height:72px; background:linear-gradient(135deg,#333,#111); border-radius:6px }
+.track-title { font-weight:600 }
+.track-artist { color:#b3b3b3; font-size:0.9rem }
+/* Cover image when artwork is available */
+.cover {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.meta-col { display:flex; flex-direction:column }
+.track-album { color:#9aa3a3; font-size:0.85rem; margin-top:4px }
+
+/* Loading bar */
+.progress-container { margin-bottom: 0.5rem }
+.progress-bar { position: relative; width: 100%; height: 8px; background: rgba(255,255,255,0.04); border-radius: 4px; overflow: hidden }
+.buffered-fill { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(255,255,255,0.12); z-index: 1 }
+.played-fill { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg,#1db954,#61dafb); z-index: 2 }
+
+/* small fallback for very old browsers */
+.loading-text { font-size:0.85rem; color:#bdbdbd }
+
+/* Upload overlay + spinner */
+.upload-overlay { position: absolute; inset: 0; display:flex; flex-direction:column; gap:0.5rem; align-items:center; justify-content:center; background: rgba(0,0,0,0.6); border-radius: 8px; color: #fff }
+.spinner { width:48px; height:48px; border-radius:50%; border:6px solid rgba(255,255,255,0.12); border-top-color: #1db954; animation: spin 1s linear infinite }
+.upload-text { font-size:0.95rem }
+
+@keyframes spin { to { transform: rotate(360deg) } }
+
+/* Time row */
+.time-row { display:flex; justify-content:space-between; margin-top:6px; color:#bdbdbd; font-size:0.85rem }
+.time-elapsed, .time-duration { width: 48px; text-align: center }
+
+.controls-row { display:flex; align-items:center; gap:12px; margin-top:12px }
+.controls-row.centered { justify-content: center }
+.play-btn { background: linear-gradient(90deg,#1db954,#61dafb); border:none; color:#022; font-weight:700; width:64px; height:64px; border-radius:999px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow: 0 6px 18px rgba(0,0,0,0.5); transition: transform 120ms ease, box-shadow 120ms ease; padding: 6px }
+.play-btn.playing { transform: scale(1.05); }
+.play-btn:active { transform: scale(0.96); box-shadow: 0 4px 10px rgba(0,0,0,0.4) }
+.play-btn.playing::after {
+  content: '';
+  position: absolute;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(rgba(34,139,230,0.12), rgba(34,139,230,0));
+  animation: pulse 1400ms infinite ease-out;
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.9 }
+  70% { transform: translate(-50%, -50%) scale(1.12); opacity: 0.02 }
+  100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0 }
+}
+.player-controls-spacer { flex:1 }
+
+/* seek thumb */
+.progress-bar { position: relative; height: 8px }
+.seek-thumb { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.4); cursor: pointer }
+.seek-thumb:active { transform: translate(-50%, -50%) scale(0.95) }
+
+.debug-card { margin-top: 1rem; background: #0f0f0f; padding: 0.75rem; border-radius: 6px; color: #dcdcdc }
+.debug-pre { max-height: 120px; overflow:auto; background: #0b0b0b; padding: 0.5rem; border-radius:4px; color:#9fd9b6 }
+.debug-card a { color: #8be28b; word-break: break-all }
+
+.history-card h3 { margin-top: 0; margin-bottom: 0.5rem }
+.history-list { list-style: none; margin: 0; padding: 0; display:flex; flex-direction:column; gap:8px }
+.history-item { display:flex; gap:8px; align-items:center; cursor:pointer; padding:6px; border-radius:6px }
+.history-item:hover { background: rgba(255,255,255,0.02) }
+.history-cover { width:44px; height:44px; background: linear-gradient(135deg,#333,#111); border-radius:6px; background-size:cover; background-position:center }
+.history-title { font-size:0.95rem; font-weight:600 }
+.history-artist { font-size:0.85rem; color:#bdbdbd }
+.history-empty { color:#9aa3a3; font-size:0.95rem }
+
+/* Volume button / mute fixes: ensure icon contrasts and clickable area */
+.mute-btn { background: transparent; border: none; color: #eaeaea; padding: 6px; display:flex; align-items:center; justify-content:center; border-radius:6px; cursor:pointer }
+.mute-btn:active { transform: scale(0.96) }
+.volume-slider { width:120px }
+
+@media (max-width: 900px) {
+  .content-grid { grid-template-columns: 1fr; }
+  .sidebar { display:none }
+}
