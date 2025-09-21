@@ -125,42 +125,22 @@ const Player = forwardRef(function Player({ src, title, artist, album, cover, lo
   }
 
   return (
-    <div className="player">
-      <div className="track-info">
-        <div className="cover" style={{ backgroundImage: cover ? `url(${cover})` : undefined }} />
-        <div className="meta-col">
-          <div className="track-title">{title}</div>
-          <div className="track-artist">{artist}</div>
-          {album && <div className="track-album">{album}</div>}
+    <div className="player player-ref">
+      <div className="player-top">
+        <div className="player-art" style={{ backgroundImage: cover ? `url(${cover})` : undefined }} />
+        <div className="player-meta">
+          <div className="player-title">{title}</div>
+          <div className="player-artist">{artist}</div>
+          {album && <div className="player-album">{album}</div>}
         </div>
       </div>
 
-      <div className="player-body">
-        <div className="progress-container">
-          <div className="progress-bar" ref={progressRef} onClick={handleProgressClick}>
-            <div className="buffered-fill" style={{ width: duration ? `${Math.min(100, (bufferedEnd / duration) * 100)}%` : '0%' }} />
-            <div className="played-fill" style={{ width: duration ? `${Math.min(100, (currentTime / duration) * 100)}%` : '0%' }} />
-            <div
-              className="seek-thumb"
-              role="slider"
-              tabIndex={0}
-              aria-valuemin={0}
-              aria-valuemax={duration || 0}
-              aria-valuenow={currentTime}
-              style={{ left: duration ? `${Math.min(100, (currentTime / duration) * 100)}%` : '0%' }}
-              onPointerDown={handleThumbDown}
-              onKeyDown={handleThumbKeyDown}
-            />
-          </div>
-          <div className="time-row">
-            <div className="time-elapsed">{formatTime(currentTime)}</div>
-            <div className="time-duration">{duration ? formatTime(duration) : '--:--'}</div>
-          </div>
-        </div>
+      <div className="player-center">
+        <div className="center-controls">
+          <button className="small-btn prev-btn" aria-label="Previous">◀◀</button>
 
-        <div className="controls-row centered">
           <button
-            className={`play-btn ${playing ? 'playing' : ''}`}
+            className={`play-btn large ${playing ? 'playing' : ''}`}
             aria-label={playing ? 'Pause' : 'Play'}
             onClick={() => {
               const a = audioRef.current
@@ -169,41 +149,68 @@ const Player = forwardRef(function Player({ src, title, artist, album, cover, lo
               else { a.play().catch(()=>{}); setPlaying(true) }
             }}
           >
-            {playing ? <PauseIcon size={30} color="#022" /> : <PlayIcon size={30} color="#022" />}
+            {playing ? <PauseIcon size={34} color="#022" /> : <PlayIcon size={34} color="#022" />}
           </button>
 
+          <button className="small-btn next-btn" aria-label="Next">▶▶</button>
+        </div>
+      </div>
+
+      <div className="player-bottom">
+        <div className="progress-row">
+          <div className="time-left">{formatTime(currentTime)}</div>
+          <div className="progress-wrapper">
+            <div className="progress-bar" ref={progressRef} onClick={handleProgressClick}>
+              <div className="buffered-fill" style={{ width: duration ? `${Math.min(100, (bufferedEnd / duration) * 100)}%` : '0%' }} />
+              <div className="played-fill" style={{ width: duration ? `${Math.min(100, (currentTime / duration) * 100)}%` : '0%' }} />
+              <div
+                className="seek-thumb"
+                role="slider"
+                tabIndex={0}
+                aria-valuemin={0}
+                aria-valuemax={duration || 0}
+                aria-valuenow={currentTime}
+                style={{ left: duration ? `${Math.min(100, (currentTime / duration) * 100)}%` : '0%' }}
+                onPointerDown={handleThumbDown}
+                onKeyDown={handleThumbKeyDown}
+              />
+            </div>
+          </div>
+          <div className="time-right">{duration ? formatTime(duration) : '--:--'}</div>
+        </div>
+
+        <div className="bottom-controls">
           <div className="volume-block">
             <button className="mute-btn" onClick={() => setMuted(!muted)} aria-label={muted ? 'Unmute' : 'Mute'}>
-              {muted ? <MuteIcon size={20} color="#eaeaea" /> : <VolumeIcon size={20} color="#eaeaea" />}
+              {muted ? <MuteIcon size={18} color="#eaeaea" /> : <VolumeIcon size={18} color="#eaeaea" />}
             </button>
             <input className="volume-slider" type="range" min="0" max="1" step="0.01" value={muted ? 0 : volume} onChange={(e) => { setVolume(parseFloat(e.target.value)); setMuted(false) }} aria-label="Volume" />
           </div>
-
         </div>
 
-        <audio
-          ref={audioRef}
-          src={src}
-          style={{ display: 'none' }}
-          onPlay={() => setPlaying(true)}
-          onPause={() => setPlaying(false)}
-          onCanPlay={() => onCanPlay && onCanPlay()}
-          onLoadedMetadata={handleLoadedMetadata}
-          onProgress={() => updateBuffered()}
-          onTimeUpdate={handleTimeUpdate}
-          onError={(e) => {
-            const a = audioRef.current
-            let msg = 'Unknown audio error'
-            try {
-              const code = a?.error?.code
-              if (code === 1) msg = 'Aborted'
-              else if (code === 2) msg = 'Network error'
-              else if (code === 3) msg = 'Decoding error'
-              else if (code === 4) msg = 'Unsupported format'
-            } catch (err) {}
-            onError && onError(msg)
-          }}
-        />
+      <audio
+        ref={audioRef}
+        src={src}
+        style={{ display: 'none' }}
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onCanPlay={() => onCanPlay && onCanPlay()}
+        onLoadedMetadata={handleLoadedMetadata}
+        onProgress={() => updateBuffered()}
+        onTimeUpdate={handleTimeUpdate}
+        onError={(e) => {
+          const a = audioRef.current
+          let msg = 'Unknown audio error'
+          try {
+            const code = a?.error?.code
+            if (code === 1) msg = 'Aborted'
+            else if (code === 2) msg = 'Network error'
+            else if (code === 3) msg = 'Decoding error'
+            else if (code === 4) msg = 'Unsupported format'
+          } catch (err) {}
+          onError && onError(msg)
+        }}
+      />
       </div>
     </div>
   )
