@@ -133,8 +133,8 @@ body { overflow: hidden; }
 .play-btn.playing::after {
   content: '';
   position: absolute;
-  width: 88px;
-  height: 88px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   left: 50%;
   top: 50%;
@@ -149,6 +149,21 @@ body { overflow: hidden; }
   70% { transform: translate(-50%, -50%) scale(1.12); opacity: 0.02 }
   100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0 }
 }
+/* Prev/Next button styles (moved out of keyframes) */
+.small-btn.prev-btn, .small-btn.next-btn {
+  width: auto;
+  height: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transition: none;
+}
+.small-btn.prev-btn:hover, .small-btn.next-btn:hover { transform: none }
+.small-btn.prev-btn:active, .small-btn.next-btn:active { transform: none }
+.small-btn.prev-btn[disabled], .small-btn.next-btn[disabled] { opacity: 0.45; cursor: default }
 .player-controls-spacer { flex:1 }
 
 /* Reference-style player layout */
@@ -167,7 +182,22 @@ body { overflow: hidden; }
 .player-center { display:flex; justify-content:center; align-items:center }
 .center-controls { display:flex; gap:32px; align-items:center; justify-content:center }
 .small-btn { background: transparent; color:#cfcfcf; border: none; font-size:20px; cursor: pointer }
-.play-btn.large { width:100px; height:100px; padding:4px; box-shadow: 0 12px 26px rgba(0,0,0,0.6) }
+.small-btn.prev-btn, .small-btn.next-btn {
+  width: 50px;
+  height: 50px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(20,20,20,0.95), rgba(40,40,40,0.95));
+  box-shadow: 0 6px 14px rgba(0,0,0,0.6);
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+.small-btn.prev-btn svg, .small-btn.next-btn svg { display: block; width: 72%; height: 72%; }
+.small-btn.prev-btn:hover, .small-btn.next-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0,0,0,0.6) }
+.small-btn.prev-btn:active, .small-btn.next-btn:active { transform: translateY(0); box-shadow: 0 6px 12px rgba(0,0,0,0.5) }
+.small-btn.prev-btn[disabled], .small-btn.next-btn[disabled] { opacity: 0.45; cursor: default; transform: none }
+.play-btn.large { width:70px; height:70px; padding:4px; box-shadow: 0 8px 18px rgba(0,0,0,0.55) }
 
 .player-bottom { display:flex; flex-direction:column; gap:8px }
 .progress-row { display:flex; align-items:center; gap:12px }
@@ -207,4 +237,22 @@ body { overflow: hidden; }
 @media (max-width: 900px) {
   .content-grid { grid-template-columns: 1fr; }
   .sidebar { display:none }
+}
+
+/* Temporary override: force prev/next to show as plain white icons (no bubble) */
+.small-btn.prev-btn, .small-btn.next-btn {
+  background: transparent !important;
+  box-shadow: none !important;
+  width: auto !important;
+  height: auto !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+.small-btn.prev-btn svg, .small-btn.next-btn svg {
+  width: 84% !important;
+  height: 84% !important;
+}
+.small-btn.prev-btn svg path, .small-btn.next-btn svg path {
+  fill: #ffffff !important;
+  stroke: none !important;
 }

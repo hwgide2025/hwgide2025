@@ -141,7 +141,9 @@ const Player = forwardRef(function Player({ src, title, artist, album, cover, lo
 
       <div className="player-center">
         <div className="center-controls">
-          <button className="small-btn prev-btn" aria-label="Previous" onClick={() => props?.onPlayPrevious && props.onPlayPrevious()}><PrevIcon size={22} color="#dcdcdc" /></button>
+          <button className="small-btn prev-btn" aria-label="Previous" onClick={() => onPlayPrevious && onPlayPrevious()} disabled={!onPlayPrevious}>
+            <PrevIcon size={28} color="#ffffff" />
+          </button>
 
           <button
             className={`play-btn large ${playing ? 'playing' : ''}`}
@@ -153,10 +155,12 @@ const Player = forwardRef(function Player({ src, title, artist, album, cover, lo
               else { a.play().catch(()=>{}); setPlaying(true) }
             }}
           >
-            {playing ? <PauseIcon size={34} color="#022" /> : <PlayIcon size={34} color="#022" />}
+            {playing ? <PauseIcon size={24} color="#022" /> : <PlayIcon size={24} color="#022" />}
           </button>
 
-          <button className="small-btn next-btn" aria-label="Next" onClick={() => props?.onPlayNext && props.onPlayNext()}><NextIcon size={22} color="#dcdcdc" /></button>
+          <button className="small-btn next-btn" aria-label="Next" onClick={() => onPlayNext && onPlayNext()} disabled={!onPlayNext}>
+            <NextIcon size={28} color="#ffffff" />
+          </button>
         </div>
       </div>
 

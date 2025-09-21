@@ -37,16 +37,16 @@ export function MuteIcon({ size = 18, color = '#eaeaea' }) {
 
 export function PrevIcon({ size = 18, color = '#eaeaea' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-      <path d="M11 19V5L4 12l7 7zM20 19V5l-7 7 7 7z" fill={color} />
+    <svg width={size} height={size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <path d="M20 6v12l-8.5-6L20 6zM11 6v12L2.5 12 11 6z" fill={color} />
     </svg>
   )
 }
 
 export function NextIcon({ size = 18, color = '#eaeaea' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-      <path d="M13 5v14l7-7-7-7zM4 5v14l7-7-7-7z" fill={color} />
+    <svg width={size} height={size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <path d="M4 18l8.5-6L4 6v12zm9 0l8.5-6L13 6v12z" fill={color} />
     </svg>
   )
 }
